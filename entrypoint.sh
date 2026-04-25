@@ -1,13 +1,11 @@
 #!/bin/sh
 set -e
 
-# Ensure we are in the app directory
-cd /app
+echo "Running Prisma DB push..."
+npx prisma db push --accept-data-loss
 
-echo "Running database migrations..."
-# Use full path to npx if needed, but npx is usually in PATH
-npx prisma db push --skip-generate
+echo "Running seed..."
+node prisma/seed.js
 
-echo "Starting application..."
-# Use absolute path for server.js
-exec node /app/server.js
+echo "Starting app..."
+exec node server.js

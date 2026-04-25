@@ -43,5 +43,8 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-ENTRYPOINT []
-CMD ["node", "server.js"]
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/entrypoint.sh ./entrypoint.sh
+RUN chmod +x entrypoint.sh
+USER nextjs
+ENTRYPOINT ["sh", "entrypoint.sh"]

@@ -37,7 +37,7 @@ model User {
 
 model Product {
   id          String   @id @default(cuid())
-  nameHindi   String
+  nameHindi   String   @unique
   nameEnglish String?
   unit        Unit     @default(KG)
   price       Float

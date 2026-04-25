@@ -1,4 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs');
+
 const prisma = new PrismaClient();
 
 const chatniMasalaItems = [
@@ -37,37 +39,50 @@ const chatniMasalaItems = [
 async function main() {
   console.log("🌱 Starting safe seed...");
 
-  // Pre-hashed password for 'admin123'
-  const adminHash = '$2a$10$vI8tmv90zBih4m.fV2yP2.kOnd7l7A3m4/7leZ9zYp3X6b9i.kOnd7l7A3m4';
+  // Hash passwords fresh every time - never use hardcoded hashes
+  const adminPassword = await bcrypt.hash("Admin@123", 12);
+  const staffPassword = await bcrypt.hash("Staff@123", 12);
 
+  // Admin user
   const admin = await prisma.user.upsert({
     where: { email: "admin@masala.com" },
-    update: { password: adminHash },
+    update: { password: adminPassword },
     create: {
       name: "Admin",
       email: "admin@masala.com",
-      password: adminHash,
+      password: adminPassword,
       role: "ADMIN",
     },
   });
   console.log("✅ Admin user created:", admin.email);
 
-  // Products - Use create if not exists (check by nameHindi)
+  // Staff user
+  const staff = await prisma.user.upsert({
+    where: { email: "staff@masala.com" },
+    update: { password: staffPassword },
+    create: {
+      name: "Staff User",
+      email: "staff@masala.com",
+      password: staffPassword,
+      role: "STAFF",
+    },
+  });
+  console.log("✅ Staff user created:", staff.email);
+
+  // Products
   const createdProducts = [];
   for (const item of chatniMasalaItems) {
     let product = await prisma.product.findFirst({
-        where: { nameHindi: item.nameHindi }
+      where: { nameHindi: item.nameHindi }
     });
-    
+
     if (!product) {
-        product = await prisma.product.create({
-            data: item
-        });
+      product = await prisma.product.create({ data: item });
     } else {
-        product = await prisma.product.update({
-            where: { id: product.id },
-            data: { price: item.price, unit: item.unit }
-        });
+      product = await prisma.product.update({
+        where: { id: product.id },
+        data: { price: item.price, unit: item.unit },
+      });
     }
     createdProducts.push(product);
   }
@@ -79,8 +94,9 @@ async function main() {
     update: {},
     create: { name: "चटणी मसाला" },
   });
+  console.log("✅ Category created: चटणी मसाला");
 
-  // Link products
+  // Link products to category
   for (let i = 0; i < createdProducts.length; i++) {
     await prisma.categoryProduct.upsert({
       where: {
@@ -97,7 +113,12 @@ async function main() {
       },
     });
   }
-  console.log("✅ Seed completed successfully!");
+  console.log("✅ Linked 30 products to चटणी मसाला category");
+
+  console.log("🎉 Seed completed successfully!");
+  console.log("\n📋 Login Credentials:");
+  console.log("   Admin: admin@masala.com / Admin@123");
+  console.log("   Staff: staff@masala.com / Staff@123");
 }
 
 main()
