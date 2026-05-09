@@ -14,6 +14,7 @@ const schema = z.object({
   nameEnglish: z.string().optional(),
   unit: z.enum(["KG", "GM", "PACK"]),
   price: z.string().min(1, "किंमत आवश्यक आहे"),
+  proof: z.string().optional(),
   description: z.string().optional(),
 });
 
@@ -29,6 +30,7 @@ export default function NewProductPage() {
       nameHindi: "",
       price: "",
       nameEnglish: "",
+      proof: "",
       description: ""
     },
   });
@@ -107,6 +109,15 @@ export default function NewProductPage() {
               />
               {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price.message}</p>}
             </div>
+          </div>
+
+          <div>
+            <label className="block font-semibold text-gray-700 mb-2 hindi-text">प्रमाण (Proof)</label>
+            <input
+              {...register("proof")}
+              className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 hindi-text"
+              placeholder="जसे: ५०० ग्राम"
+            />
           </div>
 
           <div>

@@ -69,8 +69,10 @@ export const InvoiceHTML = ({ invoice, shopName, shopAddress, shopPhone }: Invoi
             {invoice.items.map((item: any, i: number) => (
               <tr key={item.id} className="text-gray-800">
                 <td className="py-3 px-4 text-center text-sm">{i + 1}</td>
-                <td className="py-3 px-4 font-medium">{item.nameHindi}</td>
-                <td className="py-3 px-4 text-center text-sm">{item.quantity} {item.unit}</td>
+                <td className="py-3 px-4 font-medium">
+                  <div>{item.nameHindi}</div>
+                </td>
+                <td className="py-3 px-4 text-center text-sm">{item.proof || item.quantity} {item.unit}</td>
                 <td className="py-3 px-4 text-right text-sm">{item.rate.toFixed(2)}</td>
                 <td className="py-3 px-4 text-right font-semibold">{item.amount.toFixed(2)}</td>
               </tr>

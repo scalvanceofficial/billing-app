@@ -112,8 +112,10 @@ export const InvoiceDocument = ({ invoice, shopName, shopAddress, shopPhone }: I
           {invoice.items.map((item: any, i: number) => (
             <View key={item.id} style={styles.tableRow}>
               <Text style={styles.colSr}>{i + 1}</Text>
-              <Text style={styles.colName}>{item.nameHindi}</Text>
-              <Text style={styles.colQty}>{item.quantity} {item.unit}</Text>
+              <View style={styles.colName}>
+                <Text>{item.nameHindi}</Text>
+              </View>
+              <Text style={styles.colQty}>{item.proof || item.quantity} {item.unit}</Text>
               <Text style={styles.colRate}>{item.rate.toFixed(2)}</Text>
               <Text style={styles.colAmt}>{item.amount.toFixed(2)}</Text>
             </View>

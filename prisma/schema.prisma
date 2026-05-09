@@ -41,6 +41,7 @@ model Product {
   nameEnglish String?
   unit        Unit     @default(KG)
   price       Float
+  proof       String?  // Default proof
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -67,6 +68,12 @@ model CategoryProduct {
   categoryId String
   productId  String
   order      Int      @default(0)
+  
+  // Category specific overrides
+  price      Float?
+  unit       Unit?
+  proof      String?
+  
   createdAt  DateTime @default(now())
 
   category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
@@ -105,6 +112,7 @@ model InvoiceItem {
   nameHindi   String
   nameEnglish String?
   unit        Unit
+  proof       String?
   quantity    Float
   rate        Float
   amount      Float

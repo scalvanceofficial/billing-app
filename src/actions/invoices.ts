@@ -11,6 +11,7 @@ export interface InvoiceItemInput {
   nameHindi: string;
   nameEnglish?: string;
   unit: Unit;
+  proof?: string;
   quantity: number;
   rate: number;
   amount: number;
@@ -32,37 +33,52 @@ export async function createInvoice(data: {
   const gstAmount = (subtotal * data.gstRate) / 100;
   const grandTotal = subtotal + gstAmount;
 
-  const invoice = await prisma.invoice.create({
-    data: {
-      invoiceNo: generateInvoiceNo(),
-      customerName: data.customerName,
-      phone: data.phone,
-      address: data.address,
-      gstin: data.gstin,
-      subtotal,
-      gstRate: data.gstRate,
-      gstAmount,
-      grandTotal,
-      notes: data.notes,
-      createdById: session.user.id,
-      items: {
-        create: data.items.map((item) => ({
-          productId: item.productId,
-          nameHindi: item.nameHindi,
-          nameEnglish: item.nameEnglish,
-          unit: item.unit,
-          quantity: item.quantity,
-          rate: item.rate,
-          amount: item.amount,
-        })),
+  try {
+    const invoice = await prisma.invoice.create({
+      data: {
+        invoiceNo: generateInvoiceNo(),
+        customerName: data.customerName,
+        phone: data.phone,
+        address: data.address,
+        gstin: data.gstin,
+        subtotal,
+        gstRate: data.gstRate,
+        gstAmount,
+        grandTotal,
+        notes: data.notes,
+        createdById: session.user.id,
+        items: {
+          create: data.items.map((item) => ({
+            productId: item.productId,
+            nameHindi: item.nameHindi,
+            nameEnglish: item.nameEnglish,
+            unit: item.unit,
+            proof: item.proof,
+            quantity: item.quantity,
+            rate: item.rate,
+            amount: item.amount,
+          })),
+        },
       },
-    },
-    include: { items: true, createdBy: true },
-  });
+      include: { items: true, createdBy: true },
+    });
 
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/invoices");
-  return { success: true, invoice };
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/invoices");
+    return { success: true, invoice };
+  } catch (error: any) {
+    console.error("❌ [CREATE INVOICE ERROR]:", error);
+    
+    // Check for Prisma foreign key error
+    if (error.code === 'P2003') {
+      return { 
+        success: false, 
+        error: "Session Error: Your login session might be outdated due to a system restart. Please LOGOUT and LOGIN again to continue." 
+      };
+    }
+    
+    return { success: false, error: error.message || "Failed to create invoice" };
+  }
 }
 
 export async function getInvoice(id: string) {
@@ -156,15 +172,15 @@ export async function getDashboardStats(days = 30) {
 
   // Compute category totals
   const categoryTotals = topCategories
-    .map((cat) => ({
+    .map((cat: any) => ({
       name: cat.name,
       total: cat.products.reduce(
-        (sum, cp) =>
-          sum + cp.product.invoiceItems.reduce((s, ii) => s + ii.amount, 0),
+        (sum: number, cp: any) =>
+          sum + cp.product.invoiceItems.reduce((s: number, ii: any) => s + ii.amount, 0),
         0
       ),
     }))
-    .sort((a, b) => b.total - a.total)
+    .sort((a: any, b: any) => b.total - a.total)
     .slice(0, 5);
 
   return {
@@ -172,7 +188,7 @@ export async function getDashboardStats(days = 30) {
     month: { total: monthSales._sum.grandTotal || 0, count: monthSales._count },
     year: { total: yearSales._sum.grandTotal || 0, count: yearSales._count },
     recentInvoices,
-    topProducts: topProducts.map((p) => ({
+    topProducts: topProducts.map((p: any) => ({
       name: p.nameHindi,
       amount: p._sum.amount || 0,
       quantity: p._sum.quantity || 0,

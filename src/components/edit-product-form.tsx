@@ -15,6 +15,7 @@ const schema = z.object({
   nameEnglish: z.string().optional(),
   unit: z.enum(["KG", "GM", "PACK"]),
   price: z.string().min(1, "किंमत आवश्यक आहे"),
+  proof: z.string().optional(),
   description: z.string().optional(),
 });
 
@@ -24,6 +25,7 @@ interface Product {
   nameEnglish: string | null;
   unit: Unit;
   price: number;
+  proof: string | null;
   description: string | null;
 }
 
@@ -38,6 +40,7 @@ export default function EditProductForm({ product }: { product: Product }) {
       nameEnglish: product.nameEnglish || "",
       unit: product.unit,
       price: String(product.price),
+      proof: product.proof || "",
       description: product.description || "",
     },
   });
@@ -90,6 +93,11 @@ export default function EditProductForm({ product }: { product: Product }) {
               <input {...register("price")} type="number" step="0.01" className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 amount-text" />
               {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price.message}</p>}
             </div>
+          </div>
+
+          <div>
+            <label className="block font-semibold text-gray-700 mb-2 hindi-text">प्रमाण (Proof)</label>
+            <input {...register("proof")} className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 hindi-text" placeholder="जसे: ५०० ग्राम" />
           </div>
 
           <div>

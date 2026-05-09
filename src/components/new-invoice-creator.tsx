@@ -14,12 +14,22 @@ interface Product {
   nameEnglish: string | null;
   unit: Unit;
   price: number;
+  proof: string | null;
+}
+
+interface CategoryProduct {
+  productId: string;
+  price: number | null;
+  unit: Unit | null;
+  proof: string | null;
+  product: Product;
+  order: number;
 }
 
 interface Category {
   id: string;
   name: string;
-  products: { product: Product; order: number }[];
+  products: CategoryProduct[];
 }
 
 interface InvoiceItem {
@@ -27,6 +37,7 @@ interface InvoiceItem {
   nameHindi: string;
   nameEnglish?: string;
   unit: Unit;
+  proof?: string;
   quantity: number;
   rate: number;
   amount: number;
@@ -56,37 +67,42 @@ export default function NewInvoiceCreator({
   const [searchProduct, setSearchProduct] = useState("");
   const [showCategoryModal, setShowCategoryModal] = useState(false);
 
-  const subtotal = items.reduce((s, i) => s + i.amount, 0);
+  const subtotal = items.reduce((s: number, i: InvoiceItem) => s + i.amount, 0);
   const gstAmount = (subtotal * gstRate) / 100;
   const grandTotal = subtotal + gstAmount;
 
-  const updateItem = (idx: number, field: keyof InvoiceItem, value: string | number) => {
-    setItems((prev) =>
-      prev.map((item, i) => {
+  const updateItem = (idx: number, field: keyof InvoiceItem, value: any) => {
+    setItems((prev: InvoiceItem[]) =>
+      prev.map((item: InvoiceItem, i: number) => {
         if (i !== idx) return item;
         const updated = { ...item, [field]: value };
-        if (field === "quantity" || field === "rate") {
-          updated.amount = Number(updated.quantity) * Number(updated.rate);
+        // If proof or rate is updated, recalculate amount
+        if (field === "proof" || field === "rate") {
+          const qty = parseFloat(String(updated.proof)) || 0;
+          updated.quantity = qty; // Keep quantity in sync for DB
+          updated.amount = qty * Number(updated.rate);
         }
         return updated;
       })
     );
   };
 
-  const removeItem = (idx: number) => setItems((prev) => prev.filter((_, i) => i !== idx));
+  const removeItem = (idx: number) => setItems((prev: InvoiceItem[]) => prev.filter((_: InvoiceItem, i: number) => i !== idx));
 
   const addProduct = (p: Product) => {
-    if (items.find((i) => i.productId === p.id)) return;
-    setItems((prev) => [
+    if (items.find((i: InvoiceItem) => i.productId === p.id)) return;
+    const qty = parseFloat(p.proof || "0") || 0;
+    setItems((prev: InvoiceItem[]) => [
       ...prev,
       {
         productId: p.id,
         nameHindi: p.nameHindi,
         nameEnglish: p.nameEnglish || undefined,
         unit: p.unit,
-        quantity: 0,
+        proof: p.proof || "",
+        quantity: qty,
         rate: p.price,
-        amount: 0,
+        amount: qty * p.price,
       },
     ]);
     setSearchProduct("");
@@ -95,15 +111,21 @@ export default function NewInvoiceCreator({
   const loadCategory = (cat: Category) => {
     const newItems: InvoiceItem[] = cat.products
       .sort((a, b) => a.order - b.order)
-      .map((cp) => ({
-        productId: cp.product.id,
-        nameHindi: cp.product.nameHindi,
-        nameEnglish: cp.product.nameEnglish || undefined,
-        unit: cp.product.unit,
-        quantity: 0,
-        rate: cp.product.price,
-        amount: 0,
-      }));
+      .map((cp) => {
+        const proof = cp.proof || cp.product.proof || "";
+        const rate = cp.price || cp.product.price;
+        const qty = parseFloat(proof) || 0;
+        return {
+          productId: cp.product.id,
+          nameHindi: cp.product.nameHindi,
+          nameEnglish: cp.product.nameEnglish || undefined,
+          unit: cp.unit || cp.product.unit,
+          proof,
+          quantity: qty,
+          rate,
+          amount: qty * rate,
+        };
+      });
     setItems(newItems);
     setShowCategoryModal(false);
   };
@@ -111,7 +133,7 @@ export default function NewInvoiceCreator({
   const addEmptyRow = () => {
     setItems((prev) => [
       ...prev,
-      { nameHindi: "", unit: Unit.KG, quantity: 0, rate: 0, amount: 0 },
+      { nameHindi: "", unit: Unit.KG, proof: "", quantity: 0, rate: 0, amount: 0 },
     ]);
   };
 
@@ -121,19 +143,27 @@ export default function NewInvoiceCreator({
     if (validItems.length === 0) return alert("किमान एक वस्तू जोडा");
 
     setLoading(true);
-    const result = await createInvoice({
-      customerName,
-      phone: phone || undefined,
-      address: address || undefined,
-      gstin: gstin || undefined,
-      gstRate,
-      notes: notes || undefined,
-      items: validItems,
-    });
-    setLoading(false);
+    try {
+      const result = await createInvoice({
+        customerName,
+        phone: phone || undefined,
+        address: address || undefined,
+        gstin: gstin || undefined,
+        gstRate,
+        notes: notes || undefined,
+        items: validItems,
+      });
 
-    if (result?.success && result.invoice) {
-      router.push(`/dashboard/invoices/${result.invoice.id}`);
+      if (result?.success && result.invoice) {
+        router.push(`/dashboard/invoices/${result.invoice.id}`);
+      } else {
+        alert(result?.error || "काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.");
+        setLoading(false);
+      }
+    } catch (error: any) {
+      console.error("Submit Error:", error);
+      alert("Error: " + (error.message || "Unknown error occurred"));
+      setLoading(false);
     }
   };
 
@@ -185,7 +215,7 @@ export default function NewInvoiceCreator({
               <label className="block font-semibold text-gray-700 mb-2 hindi-text">ग्राहकाचे नाव * (Customer Name)</label>
               <input
                 value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
+                onChange={(e: any) => setCustomerName(e.target.value)}
                 className="w-full px-4 py-3 text-xl border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 font-semibold"
                 placeholder="Customer Name"
                 autoFocus
@@ -195,7 +225,7 @@ export default function NewInvoiceCreator({
               <label className="block font-semibold text-gray-700 mb-2 hindi-text">मोबाइल नंबर</label>
               <input
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e: any) => setPhone(e.target.value)}
                 className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500"
                 placeholder="+91 98765 43210"
                 type="tel"
@@ -205,7 +235,7 @@ export default function NewInvoiceCreator({
               <label className="block font-semibold text-gray-700 mb-2">GSTIN (Optional)</label>
               <input
                 value={gstin}
-                onChange={(e) => setGstin(e.target.value.toUpperCase())}
+                onChange={(e: any) => setGstin(e.target.value.toUpperCase())}
                 className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 font-mono"
                 placeholder="27XXXXX..."
                 maxLength={15}
@@ -215,7 +245,7 @@ export default function NewInvoiceCreator({
               <label className="block font-semibold text-gray-700 mb-2 hindi-text">पत्ता (Address)</label>
               <textarea
                 value={address}
-                onChange={(e) => setAddress(e.target.value)}
+                onChange={(e: any) => setAddress(e.target.value)}
                 rows={2}
                 className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 resize-none"
                 placeholder="Customer Address"
@@ -225,7 +255,7 @@ export default function NewInvoiceCreator({
               <label className="block font-semibold text-gray-700 mb-2 hindi-text">GST दर</label>
               <select
                 value={gstRate}
-                onChange={(e) => setGstRate(Number(e.target.value))}
+                onChange={(e: any) => setGstRate(Number(e.target.value))}
                 className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 bg-white"
               >
                 <option value={0}>0% (No GST)</option>
@@ -238,7 +268,7 @@ export default function NewInvoiceCreator({
               <label className="block font-semibold text-gray-700 mb-2 hindi-text">टीप (Notes)</label>
               <input
                 value={notes}
-                onChange={(e) => setNotes(e.target.value)}
+                onChange={(e: any) => setNotes(e.target.value)}
                 className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500"
                 placeholder="Optional notes..."
               />
@@ -292,7 +322,7 @@ export default function NewInvoiceCreator({
               <div className="relative flex-1 min-w-48">
                 <input
                   value={searchProduct}
-                  onChange={(e) => setSearchProduct(e.target.value)}
+                  onChange={(e: any) => setSearchProduct(e.target.value)}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 hindi-text"
                   placeholder="उत्पादन शोधा आणि जोडा..."
                 />
@@ -328,8 +358,8 @@ export default function NewInvoiceCreator({
                 <tr>
                   <th className="text-left py-3 px-3 text-green-800 font-bold hindi-text w-8">#</th>
                   <th className="text-left py-3 px-3 text-green-800 font-bold hindi-text">उत्पादनाचे नाव</th>
-                  <th className="text-center py-3 px-3 text-green-800 font-bold w-20">युनिट</th>
-                  <th className="text-center py-3 px-3 text-green-800 font-bold w-28 hindi-text">प्रमाण</th>
+                  <th className="text-center py-3 px-3 text-green-800 font-bold w-28">युनिट</th>
+                  <th className="text-center py-3 px-3 text-green-800 font-bold w-32 hindi-text">प्रमाण (Proof)</th>
                   <th className="text-right py-3 px-3 text-green-800 font-bold w-28 hindi-text">दर (₹)</th>
                   <th className="text-right py-3 px-3 text-green-800 font-bold w-32 hindi-text">रक्कम (₹)</th>
                   <th className="w-10"></th>
@@ -343,7 +373,7 @@ export default function NewInvoiceCreator({
                     </td>
                   </tr>
                 )}
-                {items.map((item, idx) => (
+                {items.map((item: InvoiceItem, idx: number) => (
                   <tr key={idx} className={`hover:bg-green-50/30 transition-colors ${item.quantity > 0 ? 'bg-green-50/20' : ''}`}>
                     <td className="py-2 px-3 text-gray-400 text-xs">{idx + 1}</td>
                     <td className="py-2 px-3">
@@ -352,31 +382,36 @@ export default function NewInvoiceCreator({
                       ) : (
                         <input
                           value={item.nameHindi}
-                          onChange={(e) => updateItem(idx, "nameHindi", e.target.value)}
+                          onChange={(e: any) => updateItem(idx, "nameHindi", e.target.value)}
                           className="w-full px-2 py-1 border border-gray-200 rounded-lg hindi-text text-sm focus:outline-none focus:border-green-500"
                           placeholder="नाव टाका..."
                         />
                       )}
                     </td>
                     <td className="py-2 px-3 text-center">
-                      <span className="text-xs font-bold text-gray-600 bg-gray-100 px-2 py-1 rounded-lg">{item.unit}</span>
+                      <select
+                        value={item.unit}
+                        onChange={(e: any) => updateItem(idx, "unit", e.target.value)}
+                        className="w-full bg-gray-100 border-none rounded-lg px-2 py-1 text-xs font-bold text-gray-600 focus:ring-2 focus:ring-green-500"
+                      >
+                        {Object.values(Unit).map((u: any) => (
+                          <option key={u} value={u}>{u}</option>
+                        ))}
+                      </select>
                     </td>
                     <td className="py-2 px-3">
                       <input
-                        type="number"
-                        value={item.quantity || ""}
-                        onChange={(e) => updateItem(idx, "quantity", parseFloat(e.target.value) || 0)}
-                        step={item.unit === "KG" ? "0.25" : "1"}
-                        min="0"
-                        className="w-full px-2 py-1.5 border-2 border-gray-200 rounded-lg text-center font-bold text-base focus:outline-none focus:border-green-500 focus:bg-green-50 amount-text"
-                        placeholder="0"
+                        value={item.proof || ""}
+                        onChange={(e: any) => updateItem(idx, "proof", e.target.value)}
+                        className="w-full px-2 py-1.5 border-2 border-gray-200 rounded-lg text-center font-bold text-base focus:outline-none focus:border-green-500 focus:bg-green-50"
+                        placeholder="प्रमाण"
                       />
                     </td>
                     <td className="py-2 px-3">
                       <input
                         type="number"
                         value={item.rate || ""}
-                        onChange={(e) => updateItem(idx, "rate", parseFloat(e.target.value) || 0)}
+                        onChange={(e: any) => updateItem(idx, "rate", parseFloat(e.target.value) || 0)}
                         step="0.01"
                         min="0"
                         className="w-full px-2 py-1.5 border-2 border-gray-200 rounded-lg text-right font-semibold focus:outline-none focus:border-green-500 amount-text"

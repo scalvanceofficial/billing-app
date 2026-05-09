@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { Unit } from "@prisma/client";
+import { Unit } from "@prisma/client"; // Enum for product units
 import * as XLSX from "xlsx";
 
 const productSchema = z.object({
@@ -12,6 +12,7 @@ const productSchema = z.object({
   nameEnglish: z.string().optional(),
   unit: z.nativeEnum(Unit),
   price: z.number().positive("किंमत शून्यापेक्षा जास्त असणे आवश्यक आहे"),
+  proof: z.string().optional(),
   description: z.string().optional(),
 });
 
@@ -24,6 +25,7 @@ export async function createProduct(formData: FormData) {
     nameEnglish: (formData.get("nameEnglish") as string) || undefined,
     unit: formData.get("unit") as Unit,
     price: parseFloat(formData.get("price") as string),
+    proof: (formData.get("proof") as string) || undefined,
     description: (formData.get("description") as string) || undefined,
   };
 
@@ -44,6 +46,7 @@ export async function updateProduct(id: string, formData: FormData) {
     nameEnglish: (formData.get("nameEnglish") as string) || undefined,
     unit: formData.get("unit") as Unit,
     price: parseFloat(formData.get("price") as string),
+    proof: (formData.get("proof") as string) || undefined,
     description: (formData.get("description") as string) || undefined,
   };
 
@@ -102,17 +105,22 @@ export async function bulkImportProducts(fileBuffer: ArrayBuffer) {
 
       await prisma.product.upsert({
         where: { nameHindi } as never,
-        update: { price, unit: unit in Unit ? unit : Unit.KG },
+        update: { 
+          price, 
+          unit: unit in Unit ? unit : Unit.KG,
+          proof: String(row["proof"] || row["प्रमाण"] || row["Proof"] || "").trim() || undefined,
+        },
         create: {
           nameHindi,
           nameEnglish: String(row["nameEnglish"] || row["English Name"] || "").trim() || undefined,
           unit: unit in Unit ? unit : Unit.KG,
           price,
+          proof: String(row["proof"] || row["प्रमाण"] || row["Proof"] || "").trim() || undefined,
           description: String(row["description"] || "").trim() || undefined,
         },
       });
       imported++;
-    } catch (e) {
+    } catch (e: any) {
       errors.push(String(e));
     }
   }

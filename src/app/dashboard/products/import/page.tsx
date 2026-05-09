@@ -45,7 +45,8 @@ export default function ImportProductsPage() {
                   <th className="py-1 pr-4">nameHindi</th>
                   <th className="py-1 pr-4">nameEnglish</th>
                   <th className="py-1 pr-4">unit</th>
-                  <th className="py-1">price</th>
+                  <th className="py-1 pr-4">price</th>
+                  <th className="py-1">proof</th>
                 </tr>
               </thead>
               <tbody>
@@ -53,7 +54,8 @@ export default function ImportProductsPage() {
                   <td className="py-1 pr-4 hindi-text">हळद पावडर</td>
                   <td className="py-1 pr-4">Turmeric Powder</td>
                   <td className="py-1 pr-4">KG</td>
-                  <td className="py-1">150</td>
+                  <td className="py-1 pr-4">150</td>
+                  <td className="py-1 hindi-text">५०० ग्राम</td>
                 </tr>
               </tbody>
             </table>
@@ -72,7 +74,7 @@ export default function ImportProductsPage() {
               type="file"
               accept=".xlsx,.xls,.csv"
               className="hidden"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              onChange={(e: any) => setFile(e.target.files?.[0] || null)}
             />
             <FileSpreadsheet className="w-12 h-12 text-gray-400 mx-auto mb-3" />
             {file ? (
