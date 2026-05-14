@@ -23,18 +23,23 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME}
+        - NEXT_PUBLIC_SHOP_NAME=${NEXT_PUBLIC_SHOP_NAME}
+        - NEXT_PUBLIC_SHOP_ADDRESS=${NEXT_PUBLIC_SHOP_ADDRESS}
+        - NEXT_PUBLIC_SHOP_PHONE=${NEXT_PUBLIC_SHOP_PHONE}
     container_name: masala_app
     restart: unless-stopped
     expose:
       - "3000"
     environment:
-      - DATABASE_URL=postgresql://masala:masala123@db:5432/masaladb
-      - AUTH_SECRET=masala-billing-super-secret-key-change-in-production
+      - DATABASE_URL=${DATABASE_URL}
+      - AUTH_SECRET=${AUTH_SECRET}
       - AUTH_TRUST_HOST=true
-      - NEXT_PUBLIC_APP_NAME=मसाला बिलिंग
-      - NEXT_PUBLIC_SHOP_NAME=श्री मसाला भांडार
-      - NEXT_PUBLIC_SHOP_ADDRESS=पुणे, महाराष्ट्र
-      - NEXT_PUBLIC_SHOP_PHONE=+91 98765 43210
+      - NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME}
+      - NEXT_PUBLIC_SHOP_NAME=${NEXT_PUBLIC_SHOP_NAME}
+      - NEXT_PUBLIC_SHOP_ADDRESS=${NEXT_PUBLIC_SHOP_ADDRESS}
+      - NEXT_PUBLIC_SHOP_PHONE=${NEXT_PUBLIC_SHOP_PHONE}
     depends_on:
       db:
         condition: service_healthy
@@ -45,10 +50,8 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
-      - "443:443"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
       - app
 
