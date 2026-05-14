@@ -79,8 +79,8 @@ export default function NewInvoiceCreator({
         // If proof or rate is updated, recalculate amount
         if (field === "proof" || field === "rate") {
           const qty = parseFloat(String(updated.proof)) || 0;
-          updated.quantity = qty; // Keep quantity in sync for DB
-          updated.amount = qty * Number(updated.rate);
+          updated.quantity = qty; // Keep numeric quantity for reports if needed
+          updated.amount = Number(updated.rate); // Amount is now direct Rate
         }
         return updated;
       })
@@ -102,7 +102,7 @@ export default function NewInvoiceCreator({
         proof: p.proof || "",
         quantity: qty,
         rate: p.price,
-        amount: qty * p.price,
+        amount: p.price,
       },
     ]);
     setSearchProduct("");
@@ -123,7 +123,7 @@ export default function NewInvoiceCreator({
           proof,
           quantity: qty,
           rate,
-          amount: qty * rate,
+          amount: rate,
         };
       });
     setItems(newItems);
