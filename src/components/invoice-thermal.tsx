@@ -5,6 +5,9 @@ interface ThermalProps {
   shopName: string;
   shopAddress: string;
   shopPhone: string;
+  logoUrl?: string;
+  gstNumber?: string;
+  fssaiNumber?: string;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -15,7 +18,10 @@ export function generateThermalPrintHTML(
   invoice: any,
   shopName: string,
   shopAddress: string,
-  shopPhone: string
+  shopPhone: string,
+  logoUrl?: string,
+  gstNumber?: string,
+  fssaiNumber?: string
 ): string {
   const dateStr = new Date(invoice.createdAt).toLocaleDateString('en-IN', {
     day: '2-digit',
@@ -92,6 +98,13 @@ export function generateThermalPrintHTML(
       letter-spacing: 0.5px;
       margin-bottom: 1.5mm;
       line-height: 1.2;
+    }
+    .logo-img {
+      width: 40mm;
+      margin: 0 auto 2mm auto;
+      display: block;
+      object-fit: contain;
+      filter: grayscale(100%);
     }
     .shop-sub {
       text-align: center;
@@ -179,9 +192,12 @@ export function generateThermalPrintHTML(
 <div class="receipt">
 
   <!-- SHOP HEADER -->
+  ${logoUrl ? `<img src="${logoUrl}" class="logo-img" alt="Logo" />` : ''}
   <div class="shop-name">${shopName}</div>
   <div class="shop-sub">${shopAddress}</div>
   <div class="shop-sub">Tel: ${shopPhone}</div>
+  ${gstNumber ? `<div class="shop-sub">GST: ${gstNumber}</div>` : ''}
+  ${fssaiNumber ? `<div class="shop-sub">FSSAI: ${fssaiNumber}</div>` : ''}
 
   <div class="div-dash"></div>
 
@@ -266,7 +282,7 @@ export function generateThermalPrintHTML(
 // ─────────────────────────────────────────────────────────────
 // React Preview Component (on-screen display only)
 // ─────────────────────────────────────────────────────────────
-export const InvoiceThermal = ({ invoice, shopName, shopAddress, shopPhone }: ThermalProps) => {
+export const InvoiceThermal = ({ invoice, shopName, shopAddress, shopPhone, logoUrl, gstNumber, fssaiNumber }: ThermalProps) => {
   const dateStr = new Date(invoice.createdAt).toLocaleDateString('en-IN', {
     day: '2-digit',
     month: '2-digit',
@@ -289,11 +305,16 @@ export const InvoiceThermal = ({ invoice, shopName, shopAddress, shopPhone }: Th
       border: '1px solid #eee',
     }}>
       {/* Shop Header */}
+      {logoUrl && (
+        <img src={logoUrl} style={{ width: '40mm', margin: '0 auto 2px auto', display: 'block', objectFit: 'contain', filter: 'grayscale(100%)' }} alt="Logo" />
+      )}
       <div style={{ textAlign: 'center', fontWeight: 900, fontSize: '18px', fontFamily: "'Noto Sans Devanagari', sans-serif", marginBottom: '3px' }}>
         {shopName}
       </div>
       <div style={{ textAlign: 'center', fontSize: '11px', marginBottom: '2px' }}>{shopAddress}</div>
-      <div style={{ textAlign: 'center', fontSize: '11px', marginBottom: '5px' }}>Tel: {shopPhone}</div>
+      <div style={{ textAlign: 'center', fontSize: '11px', marginBottom: '2px' }}>Tel: {shopPhone}</div>
+      {gstNumber && <div style={{ textAlign: 'center', fontSize: '10px', marginBottom: '2px' }}>GST: {gstNumber}</div>}
+      {fssaiNumber && <div style={{ textAlign: 'center', fontSize: '10px', marginBottom: '5px' }}>FSSAI: {fssaiNumber}</div>}
 
       <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }} />
 

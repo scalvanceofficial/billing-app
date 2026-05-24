@@ -7,9 +7,12 @@ interface InvoiceHTMLProps {
   shopName: string;
   shopAddress: string;
   shopPhone: string;
+  logoUrl?: string;
+  gstNumber?: string;
+  fssaiNumber?: string;
 }
 
-export const InvoiceHTML = ({ invoice, shopName, shopAddress, shopPhone }: InvoiceHTMLProps) => {
+export const InvoiceHTML = ({ invoice, shopName, shopAddress, shopPhone, logoUrl, gstNumber, fssaiNumber }: InvoiceHTMLProps) => {
   const dateStr = new Date(invoice.createdAt).toLocaleDateString("en-IN", { 
     day: '2-digit', 
     month: '2-digit', 
@@ -20,10 +23,19 @@ export const InvoiceHTML = ({ invoice, shopName, shopAddress, shopPhone }: Invoi
     <div className="bg-white p-8 shadow-sm border rounded-xl max-w-4xl mx-auto print:shadow-none print:border-none print:p-0" id="invoice-content">
       {/* Header */}
       <div className="flex justify-between items-start bg-green-700 p-6 rounded-lg text-white mb-6 print:bg-green-700 print:text-white print:-mx-0">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold text-yellow-400 hindi-text">{shopName}</h1>
-          <p className="text-sm opacity-90">{shopAddress}</p>
-          <p className="text-sm opacity-90">संपर्क: {shopPhone}</p>
+        <div className="flex gap-4 items-center">
+          {logoUrl && (
+            <div className="w-20 h-20 bg-white rounded-lg p-1 flex-shrink-0 flex items-center justify-center">
+              <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
+            </div>
+          )}
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold text-yellow-400 hindi-text">{shopName}</h1>
+            <p className="text-sm opacity-90">{shopAddress}</p>
+            <p className="text-sm opacity-90">संपर्क: {shopPhone}</p>
+            {gstNumber && <p className="text-xs opacity-80 mt-1">GST: {gstNumber}</p>}
+            {fssaiNumber && <p className="text-xs opacity-80">FSSAI: {fssaiNumber}</p>}
+          </div>
         </div>
         <div className="text-right">
           <h2 className="text-2xl font-bold uppercase tracking-wider">Invoice / बिल</h2>

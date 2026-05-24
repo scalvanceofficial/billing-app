@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -121,4 +121,20 @@ model InvoiceItem {
   product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@map("invoice_items")
+}
+
+model Settings {
+  id          Int      @id @default(1)
+  shopName    String   @default("श्री मसाला भांडार")
+  logoUrl     String?
+  address     String?
+  phone1      String?
+  phone2      String?
+  phone3      String?
+  gstNumber   String?
+  fssaiNumber String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("settings")
 }

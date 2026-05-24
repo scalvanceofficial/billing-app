@@ -2,19 +2,20 @@ version: "3.8"
 
 services:
   db:
-    image: postgres:16-alpine
+    image: mysql:8.0
     container_name: masala_db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: masala
-      POSTGRES_PASSWORD: masala123
-      POSTGRES_DB: masaladb
+      MYSQL_ROOT_PASSWORD: masala123
+      MYSQL_DATABASE: masaladb
+      MYSQL_USER: masala
+      MYSQL_PASSWORD: masala123
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U masala -d masaladb"]
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -56,4 +57,4 @@ services:
       - app
 
 volumes:
-  postgres_data:
+  mysql_data:

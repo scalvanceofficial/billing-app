@@ -1,6 +1,6 @@
 "use client";
 
-import { Document, Page, Text, View, StyleSheet, Font, PDFDownloadLink, PDFViewer } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Font, PDFDownloadLink, PDFViewer, Image } from '@react-pdf/renderer';
 import { Unit } from '@prisma/client';
 
 // Register Noto Sans Devanagari font for Hindi support
@@ -17,10 +17,14 @@ Font.register({
 const styles = StyleSheet.create({
   page: { padding: 30, fontFamily: 'Noto Sans Devanagari', fontSize: 10 },
   headerContainer: { flexDirection: 'row', backgroundColor: '#15803d', padding: 20, borderRadius: 5, color: '#ffffff', marginBottom: 20 },
-  shopInfo: { flex: 1 },
+  shopInfo: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 15 },
+  logoBox: { width: 80, height: 80, backgroundColor: '#ffffff', borderRadius: 5, padding: 5, justifyContent: 'center', alignItems: 'center' },
+  logoImage: { width: '100%', height: '100%', objectFit: 'contain' },
+  shopDetails: { flex: 1 },
   shopName: { fontFamily: 'Noto Sans Devanagari Bold', fontSize: 24, color: '#facc15', marginBottom: 5 },
-  shopAddress: { fontSize: 10, color: '#ecfdf5' },
-  shopPhone: { fontSize: 10, color: '#ecfdf5', marginTop: 2 },
+  shopAddress: { fontSize: 10, color: '#ecfdf5', marginBottom: 2 },
+  shopPhone: { fontSize: 10, color: '#ecfdf5' },
+  shopTaxInfo: { fontSize: 9, color: '#a7f3d0', marginTop: 3 },
   invoiceBox: { alignItems: 'flex-end', justifyContent: 'center' },
   invoiceTitle: { fontFamily: 'Noto Sans Devanagari Bold', fontSize: 18, color: '#ffffff', letterSpacing: 1 },
   invoiceNo: { fontSize: 10, marginTop: 5, color: '#ecfdf5' },
@@ -52,9 +56,12 @@ interface InvoicePDFProps {
   shopName: string;
   shopAddress: string;
   shopPhone: string;
+  logoUrl?: string;
+  gstNumber?: string;
+  fssaiNumber?: string;
 }
 
-export const InvoiceDocument = ({ invoice, shopName, shopAddress, shopPhone }: InvoicePDFProps) => {
+export const InvoiceDocument = ({ invoice, shopName, shopAddress, shopPhone, logoUrl, gstNumber, fssaiNumber }: InvoicePDFProps) => {
   const dateStr = new Date(invoice.createdAt).toLocaleDateString("en-IN", { day: '2-digit', month: '2-digit', year: 'numeric' });
 
   return (
@@ -63,9 +70,18 @@ export const InvoiceDocument = ({ invoice, shopName, shopAddress, shopPhone }: I
         {/* Header */}
         <View style={styles.headerContainer}>
           <View style={styles.shopInfo}>
-            <Text style={styles.shopName}>{shopName}</Text>
-            <Text style={styles.shopAddress}>{shopAddress}</Text>
-            <Text style={styles.shopPhone}>संपर्क: {shopPhone}</Text>
+            {logoUrl && (
+              <View style={styles.logoBox}>
+                <Image src={logoUrl} style={styles.logoImage} />
+              </View>
+            )}
+            <View style={styles.shopDetails}>
+              <Text style={styles.shopName}>{shopName}</Text>
+              <Text style={styles.shopAddress}>{shopAddress}</Text>
+              <Text style={styles.shopPhone}>संपर्क: {shopPhone}</Text>
+              {gstNumber && <Text style={styles.shopTaxInfo}>GST: {gstNumber}</Text>}
+              {fssaiNumber && <Text style={styles.shopTaxInfo}>FSSAI: {fssaiNumber}</Text>}
+            </View>
           </View>
           <View style={styles.invoiceBox}>
             <Text style={styles.invoiceTitle}>INVOICE / बिल</Text>

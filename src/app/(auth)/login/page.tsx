@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,7 +19,19 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [shopName, setShopName] = useState(process.env.NEXT_PUBLIC_SHOP_NAME || "श्री मसाला भांडार");
+  const [logoUrl, setLogoUrl] = useState("");
   const router = useRouter();
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then(res => res.json())
+      .then(data => {
+        if (data.shopName) setShopName(data.shopName);
+        if (data.logoUrl) setLogoUrl(data.logoUrl);
+      })
+      .catch(() => {});
+  }, []);
 
   const {
     register,
@@ -56,11 +68,17 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-green-700 rounded-full mb-4 shadow-lg">
-            <Leaf className="w-10 h-10 text-yellow-300" />
-          </div>
+          {logoUrl ? (
+            <div className="mx-auto w-24 h-24 bg-white rounded-full mb-4 shadow-lg flex items-center justify-center p-2">
+              <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
+            </div>
+          ) : (
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-green-700 rounded-full mb-4 shadow-lg">
+              <Leaf className="w-10 h-10 text-yellow-300" />
+            </div>
+          )}
           <h1 className="text-3xl font-bold text-green-800 hindi-text">
-            {process.env.NEXT_PUBLIC_SHOP_NAME || "श्री मसाला भांडार"}
+            {shopName}
           </h1>
           <p className="text-green-600 mt-1 text-lg">मसाला बिलिंग सिस्टम</p>
         </div>

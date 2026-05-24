@@ -13,8 +13,10 @@ import {
   LogOut,
   Leaf,
   ChevronRight,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSettings } from "@/context/SettingsContext";
 
 const navItems = [
   {
@@ -67,6 +69,13 @@ const navItems = [
     icon: Users,
     adminOnly: true,
   },
+  {
+    href: "/dashboard/settings",
+    label: "सेटिंग्ज",
+    sublabel: "Settings",
+    icon: Settings,
+    adminOnly: true,
+  },
 ];
 
 interface SidebarProps {
@@ -77,6 +86,7 @@ interface SidebarProps {
 export default function Sidebar({ userRole, userName }: SidebarProps) {
   const pathname = usePathname();
   const isAdmin = userRole === "ADMIN";
+  const { settings } = useSettings();
 
   const filteredNav = navItems.filter((item) => !item.adminOnly || isAdmin);
 
@@ -85,12 +95,18 @@ export default function Sidebar({ userRole, userName }: SidebarProps) {
       {/* Logo */}
       <div className="p-5 border-b border-green-700">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-yellow-400 rounded-xl flex items-center justify-center flex-shrink-0">
-            <Leaf className="w-7 h-7 text-green-800" />
-          </div>
+          {settings?.logoUrl ? (
+            <div className="w-12 h-12 bg-white rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0">
+              <img src={settings.logoUrl} alt="Logo" className="w-full h-full object-contain p-1" />
+            </div>
+          ) : (
+            <div className="w-12 h-12 bg-yellow-400 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Leaf className="w-7 h-7 text-green-800" />
+            </div>
+          )}
           <div className="min-w-0">
             <h1 className="text-white font-bold text-base leading-tight hindi-text truncate">
-              {process.env.NEXT_PUBLIC_SHOP_NAME || "श्री मसाला भांडार"}
+              {settings?.shopName || process.env.NEXT_PUBLIC_SHOP_NAME || "श्री मसाला भांडार"}
             </h1>
             <p className="text-green-300 text-xs mt-0.5">Masala Billing</p>
           </div>

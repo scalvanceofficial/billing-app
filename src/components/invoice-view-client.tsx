@@ -8,8 +8,15 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { InvoiceHTML } from "@/components/invoice-html";
 import { InvoiceThermal, generateThermalPrintHTML } from "@/components/invoice-thermal";
+import { useSettings } from "@/context/SettingsContext";
+import type { Settings } from "@/context/SettingsContext";
 
-export default function InvoiceViewClient({ invoice }: { invoice: any }) {
+interface InvoiceViewClientProps {
+  invoice: any;
+  initialSettings?: Omit<Settings, never> | null;
+}
+
+export default function InvoiceViewClient({ invoice, initialSettings }: InvoiceViewClientProps) {
   const [isClient, setIsClient] = useState(false);
   const [viewMode, setViewMode] = useState<'html' | 'pdf' | 'thermal'>('thermal');
 
@@ -17,13 +24,22 @@ export default function InvoiceViewClient({ invoice }: { invoice: any }) {
     setIsClient(true);
   }, []);
 
-  const shopName    = process.env.NEXT_PUBLIC_SHOP_NAME    || "श्री मसाला भांडार";
-  const shopAddress = process.env.NEXT_PUBLIC_SHOP_ADDRESS || "पुणे, महाराष्ट्र";
-  const shopPhone   = process.env.NEXT_PUBLIC_SHOP_PHONE   || "+91 98765 43210";
+  const { settings: contextSettings } = useSettings();
+
+  // Use context settings when available (dynamic); fall back to server-fetched initialSettings
+  // This eliminates the race condition where logo/GST/FSSAI were undefined on first render
+  const settings = contextSettings || initialSettings;
+
+  const shopName    = settings?.shopName    || process.env.NEXT_PUBLIC_SHOP_NAME    || "श्री मसाला भांडार";
+  const shopAddress = settings?.address || process.env.NEXT_PUBLIC_SHOP_ADDRESS || "पुणे, महाराष्ट्र";
+  const shopPhone   = settings?.phone1   || process.env.NEXT_PUBLIC_SHOP_PHONE   || "+91 98765 43210";
+  const logoUrl     = settings?.logoUrl   || undefined;
+  const gstNumber   = settings?.gstNumber   || undefined;
+  const fssaiNumber = settings?.fssaiNumber || undefined;
 
   // ── Thermal Print: generate full HTML & open in new window ──────────────
   const handleThermalPrint = () => {
-    const html = generateThermalPrintHTML(invoice, shopName, shopAddress, shopPhone);
+    const html = generateThermalPrintHTML(invoice, shopName, shopAddress, shopPhone, logoUrl, gstNumber, fssaiNumber);
     const win = window.open('', '_blank', 'width=420,height=700,toolbar=0,scrollbars=1');
     if (!win) {
       alert("Please allow pop-ups for this site to enable thermal printing.");
@@ -83,6 +99,9 @@ export default function InvoiceViewClient({ invoice }: { invoice: any }) {
                     shopName={shopName}
                     shopAddress={shopAddress}
                     shopPhone={shopPhone}
+                    logoUrl={logoUrl}
+                    gstNumber={gstNumber}
+                    fssaiNumber={fssaiNumber}
                   />
                 }
                 fileName={`${invoice.invoiceNo}.pdf`}
@@ -138,6 +157,9 @@ export default function InvoiceViewClient({ invoice }: { invoice: any }) {
                 shopName={shopName}
                 shopAddress={shopAddress}
                 shopPhone={shopPhone}
+                logoUrl={logoUrl}
+                gstNumber={gstNumber}
+                fssaiNumber={fssaiNumber}
               />
             </div>
           )}
@@ -168,6 +190,9 @@ export default function InvoiceViewClient({ invoice }: { invoice: any }) {
                     shopName={shopName}
                     shopAddress={shopAddress}
                     shopPhone={shopPhone}
+                    logoUrl={logoUrl}
+                    gstNumber={gstNumber}
+                    fssaiNumber={fssaiNumber}
                   />
                 </div>
 
@@ -196,6 +221,9 @@ export default function InvoiceViewClient({ invoice }: { invoice: any }) {
                   shopName={shopName}
                   shopAddress={shopAddress}
                   shopPhone={shopPhone}
+                  logoUrl={logoUrl}
+                  gstNumber={gstNumber}
+                  fssaiNumber={fssaiNumber}
                 />
               </PDFViewer>
             </div>
