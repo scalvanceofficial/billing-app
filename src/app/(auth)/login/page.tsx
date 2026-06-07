@@ -149,9 +149,9 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-400 mt-6">
+          {/* <p className="text-center text-sm text-gray-400 mt-6">
             Default: admin@masala.com / Admin@123
-          </p>
+          </p> */}
         </div>
       </div>
     </div>
