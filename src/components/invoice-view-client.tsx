@@ -32,7 +32,8 @@ export default function InvoiceViewClient({ invoice, initialSettings }: InvoiceV
 
   const shopName    = settings?.shopName    || process.env.NEXT_PUBLIC_SHOP_NAME    || "श्री मसाला भांडार";
   const shopAddress = settings?.address || process.env.NEXT_PUBLIC_SHOP_ADDRESS || "पुणे, महाराष्ट्र";
-  const shopPhone   = settings?.phone1   || process.env.NEXT_PUBLIC_SHOP_PHONE   || "+91 98765 43210";
+  const phoneNumbers = [settings?.phone1, settings?.phone2, settings?.phone3].filter(Boolean);
+  const shopPhone   = phoneNumbers.length > 0 ? phoneNumbers.join(', ') : (process.env.NEXT_PUBLIC_SHOP_PHONE || "+91 98765 43210");
   const logoUrl     = settings?.logoUrl   || undefined;
   const gstNumber   = settings?.gstNumber   || undefined;
   const fssaiNumber = settings?.fssaiNumber || undefined;

@@ -23,9 +23,9 @@ export async function POST(req: NextRequest) {
     // Create a unique filename based on current timestamp
     const ext = file.name.split('.').pop() || 'png';
     const filename = `logo-${Date.now()}.${ext}`;
-    
+
     const uploadDir = join(process.cwd(), "public", "uploads");
-    
+
     // Ensure directory exists
     try {
       await mkdir(uploadDir, { recursive: true });
@@ -36,9 +36,14 @@ export async function POST(req: NextRequest) {
     const path = join(uploadDir, filename);
     await writeFile(path, buffer);
 
+    // Return the file URL path - served via /uploads/[filename] route
+    // Do NOT use Base64 data URLs - they are too large for the DB column
+    const fileUrl = `/uploads/${filename}`;
+
     return NextResponse.json({ 
       success: true, 
-      url: `/uploads/${filename}` 
+      url: fileUrl,
+      fileUrl: fileUrl
     });
   } catch (error) {
     console.error("Upload error:", error);

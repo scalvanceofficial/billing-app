@@ -126,8 +126,8 @@ model InvoiceItem {
 model Settings {
   id          Int      @id @default(1)
   shopName    String   @default("श्री मसाला भांडार")
-  logoUrl     String?
-  address     String?
+  logoUrl     String?  @db.LongText
+  address     String?  @db.Text
   phone1      String?
   phone2      String?
   phone3      String?

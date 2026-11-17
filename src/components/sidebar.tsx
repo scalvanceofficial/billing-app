@@ -170,7 +170,7 @@ export default function Sidebar({ userRole, userName }: SidebarProps) {
         <div className="px-4 py-2 mb-2">
           <p className="text-white font-semibold text-sm truncate">{userName}</p>
           <p className="text-green-300 text-xs">
-            {isAdmin ? "👑 Admin" : "👤 Staff"}
+            {isAdmin ? "Admin" : "Staff"}
           </p>
         </div>
         <button

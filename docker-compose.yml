@@ -41,6 +41,8 @@ services:
       - NEXT_PUBLIC_SHOP_NAME=${NEXT_PUBLIC_SHOP_NAME}
       - NEXT_PUBLIC_SHOP_ADDRESS=${NEXT_PUBLIC_SHOP_ADDRESS}
       - NEXT_PUBLIC_SHOP_PHONE=${NEXT_PUBLIC_SHOP_PHONE}
+    volumes:
+      - app_uploads:/app/public/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -58,3 +60,4 @@ services:
 
 volumes:
   mysql_data:
+  app_uploads:
